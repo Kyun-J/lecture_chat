@@ -4,7 +4,7 @@ import io.realm.RealmModel
 import io.realm.annotations.RealmClass
 
 @RealmClass
-class Chat : RealmModel {
+open class Chat : RealmModel {
 
     var contents : String = ""
     var name : String = ""
