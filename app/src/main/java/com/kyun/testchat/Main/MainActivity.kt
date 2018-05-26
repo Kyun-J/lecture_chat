@@ -1,10 +1,15 @@
 package com.kyun.testchat.Main
 
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.IBinder
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.widget.Toast
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import com.kyun.testchat.Chat.ChatAdapter
@@ -12,6 +17,7 @@ import com.kyun.testchat.Chat.Chatitem
 import com.kyun.testchat.R
 import com.kyun.testchat.Realm.Chat
 import com.kyun.testchat.Util.Singleton
+import com.kyun.testchat.myService
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.Sort
@@ -21,7 +27,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), myService.myCallBack {
 
     private var adapter : ChatAdapter? = null //리사이클러뷰 어댑터
     private var layoutManager : LinearLayoutManager? = null //리사이클러뷰 레이아웃 매니저
@@ -31,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var rState : Boolean = true //키보드 상태(올라옴, 내려옴)
     private var isAble : Boolean = false //키보드 위치만큼 리사이클러뷰가 이동할 수 있는지
 
-    private val socket = IO.socket("http://49.236.136.85:8010") //소켓 서버
+    private val socket = IO.socket(Singleton.BaseUrl) //소켓 서버
     private val realm = Realm.getDefaultInstance() //
 
     private var LastT : Long = 0 //마지막으로 로딩한 채팅 시간
@@ -39,9 +45,42 @@ class MainActivity : AppCompatActivity() {
 
     private var userName : String = "" //사용자 이름
 
+    private var mService : myService? = null
+
+    private var isBind : Boolean = false
+
+    private val conn = object : ServiceConnection {
+        override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
+            isBind = true
+            mService = (p1 as myService.myBinder).getService()
+            mService!!.registerCallback(this@MainActivity)
+        }
+        override fun onServiceDisconnected(p0: ComponentName?) {
+            isBind = false
+        }
+    }
+
+    override fun recData(data: String) {
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if(isBind) unbindService(conn)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        bindService(Intent(this,myService::class.java),conn,0)
+
+        mService!!.getdata("test",{json->
+            Toast.makeText(this@MainActivity,
+                    json.asJsonObject.get("data").asString,
+                    Toast.LENGTH_SHORT).show()
+        })
+
+        mService!!.postdata("test2")
 
         userName = intent.getStringExtra(resources.getString(R.string.user_name)) //intent로 사용자 이름 받아옴
 

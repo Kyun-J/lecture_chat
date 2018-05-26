@@ -14,7 +14,7 @@ class Migration : RealmMigration {
                 o++
             }
             if (o == 1.toLong()) {
-                //변경점....
+
                 o++
             }
             // .....

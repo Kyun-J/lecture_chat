@@ -1,12 +1,29 @@
 package com.kyun.testchat.Util
 
 import com.kyun.testchat.Realm.Migration
+import com.kyun.testchat.Realm.Module
+import com.kyun.testchat.Retrofit.RetroService
+import com.kyun.testchat.Retrofit.addIntercepter
+import com.kyun.testchat.Retrofit.recIntercepter
 import io.realm.RealmConfiguration
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
 
 object Singleton {
 
-    val mConfig = RealmConfiguration.Builder().schemaVersion(0).migration(Migration()).build()
+    val BaseUrl = "http://49.236.136.85:8010"
+
+    val okclient = OkHttpClient().newBuilder().addInterceptor(addIntercepter()).addInterceptor(recIntercepter()).build()
+
+    val RetroS = Retrofit.Builder()
+            .client(okclient)
+            .baseUrl(BaseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build().create(RetroService::class.java)
+
+    val mConfig = RealmConfiguration.Builder().schemaVersion(0).migration(Migration()).name("Basic.realm").build()
 
     fun longToDateString(time : Long) : String {
         val calT = Calendar.getInstance()

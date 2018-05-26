@@ -10,6 +10,7 @@ open class Chat : RealmModel {
     var name : String = ""
     var time : Long = 0
     var isMe : Boolean = false
+    var yaho = ""
 
     fun set (contents : String , name : String, time : Long) : Chat {
         this.contents = contents
